@@ -1,14 +1,14 @@
 #Requires -Version 7.0
 [CmdletBinding()]
 param(
-    [Parameter(ValueFromRemainingArguments = $true)]
+    [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
     [string[]]$CommandArgs,
 
     [Parameter()]
     [string]$SurfaceRoot,
 
     [Parameter()]
-    [string]$ReportPath = (Join-Path (Split-Path -Parent $PSScriptRoot) '..\artifacts\cli\cdev-cli-last-run.json')
+    [string]$ReportPath = (Join-Path (Split-Path -Parent $PSScriptRoot) 'artifacts\cli\cdev-cli-last-run.json')
 )
 
 Set-StrictMode -Version Latest
