@@ -83,7 +83,7 @@ function Show-CdevHelp {
 
 Assert-CdevCommand -Name 'pwsh'
 $cliRepoRoot = Get-CdevRepoRoot -ScriptPath $PSCommandPath
-$argsMap = Convert-CdevArgsToMap -Args $CommandArgs
+$argsMap = Convert-CdevArgsToMap -InputArgs $CommandArgs
 $script:resolvedSurfaceRoot = $null
 
 function Get-CdevResolvedSurfaceRoot {

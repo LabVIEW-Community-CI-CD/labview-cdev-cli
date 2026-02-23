@@ -69,6 +69,27 @@ Describe 'cdev CLI command contract' {
         }
     }
 
+    It 'honors --output-root for release package command' {
+        $tempRoot = if ([string]::IsNullOrWhiteSpace($env:TEMP)) { [System.IO.Path]::GetTempPath() } else { $env:TEMP }
+        $outputRoot = Join-Path $tempRoot ("cdev-cli-release-" + [Guid]::NewGuid().ToString('N'))
+        $reportPath = Join-Path $tempRoot ("cdev-cli-release-report-" + [Guid]::NewGuid().ToString('N') + '.json')
+        $resolvedOutputRoot = [System.IO.Path]::GetFullPath($outputRoot)
+
+        try {
+            & pwsh -NoProfile -File $script:entrypoint -ReportPath $reportPath release package --output-root $outputRoot
+            $LASTEXITCODE | Should -Be 0
+
+            $report = Get-Content -LiteralPath $reportPath -Raw | ConvertFrom-Json -ErrorAction Stop
+            [string]$report.status | Should -Be 'succeeded'
+            [string]$report.data.output_root | Should -Be $resolvedOutputRoot
+            (Test-Path -LiteralPath (Join-Path $resolvedOutputRoot 'cdev-cli-win-x64.zip') -PathType Leaf) | Should -BeTrue
+            (Test-Path -LiteralPath (Join-Path $resolvedOutputRoot 'cdev-cli-linux-x64.tar.gz') -PathType Leaf) | Should -BeTrue
+        } finally {
+            Remove-Item -LiteralPath $outputRoot -Recurse -Force -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $reportPath -Force -ErrorAction SilentlyContinue
+        }
+    }
+
     It 'has parse-safe PowerShell syntax' {
         $tokens = $null
         $errors = $null

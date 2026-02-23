@@ -50,12 +50,29 @@ function Invoke-CdevReleasePackage {
 
     $zipPath = Join-Path $resolvedOutput 'cdev-cli-win-x64.zip'
     if (Test-Path -LiteralPath $zipPath -PathType Leaf) { Remove-Item -LiteralPath $zipPath -Force }
-    Compress-Archive -Path (Join-Path $stagingRoot 'win-x64\*') -DestinationPath $zipPath -CompressionLevel Optimal
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
+    $winArchiveSource = Join-Path $stagingRoot 'win-x64'
+    if (-not (Test-Path -LiteralPath $winArchiveSource -PathType Container)) {
+        throw "Windows staging path not found: $winArchiveSource"
+    }
+    [System.IO.Compression.ZipFile]::CreateFromDirectory(
+        $winArchiveSource,
+        $zipPath,
+        [System.IO.Compression.CompressionLevel]::Optimal,
+        $false
+    )
+    if (-not (Test-Path -LiteralPath $zipPath -PathType Leaf)) {
+        throw "Failed to create zip package at $zipPath"
+    }
 
     $tarPath = Join-Path $resolvedOutput 'cdev-cli-linux-x64.tar.gz'
     if (Test-Path -LiteralPath $tarPath -PathType Leaf) { Remove-Item -LiteralPath $tarPath -Force }
     & tar -czf $tarPath -C (Join-Path $stagingRoot 'linux-x64') .
     if ($LASTEXITCODE -ne 0) {
+        throw "Failed to create tar.gz package at $tarPath"
+    }
+    if (-not (Test-Path -LiteralPath $tarPath -PathType Leaf)) {
         throw "Failed to create tar.gz package at $tarPath"
     }
 

@@ -39,16 +39,16 @@ function Assert-CdevCommand {
 }
 
 function Convert-CdevArgsToMap {
-    param([string[]]$Args)
+    param([string[]]$InputArgs)
 
     $map = @{}
-    if ($null -eq $Args) {
+    if ($null -eq $InputArgs) {
         return $map
     }
 
     $i = 0
-    while ($i -lt $Args.Count) {
-        $token = [string]$Args[$i]
+    while ($i -lt $InputArgs.Count) {
+        $token = [string]$InputArgs[$i]
         if (-not $token.StartsWith('--')) {
             $i++
             continue
@@ -56,8 +56,8 @@ function Convert-CdevArgsToMap {
 
         $key = $token.Substring(2)
         $value = $true
-        if (($i + 1) -lt $Args.Count -and -not [string]$Args[$i + 1] -like '--*') {
-            $value = [string]$Args[$i + 1]
+        if (($i + 1) -lt $InputArgs.Count -and -not ([string]$InputArgs[$i + 1]).StartsWith('--')) {
+            $value = [string]$InputArgs[$i + 1]
             $i += 2
         } else {
             $i += 1
