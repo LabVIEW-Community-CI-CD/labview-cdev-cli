@@ -50,7 +50,8 @@ Describe 'cdev CLI command contract' {
     }
 
     It 'runs help command without requiring a surface root path' {
-        $reportPath = Join-Path $env:TEMP ("cdev-cli-help-" + [Guid]::NewGuid().ToString('N') + '.json')
+        $tempRoot = if ([string]::IsNullOrWhiteSpace($env:TEMP)) { [System.IO.Path]::GetTempPath() } else { $env:TEMP }
+        $reportPath = Join-Path $tempRoot ("cdev-cli-help-" + [Guid]::NewGuid().ToString('N') + '.json')
         $previousSurfaceRoot = $env:CDEV_SURFACE_ROOT
 
         try {
