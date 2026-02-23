@@ -29,6 +29,7 @@ pwsh -NoProfile -File .\scripts\Invoke-CdevCli.ps1 <group> <command> [options]
 pwsh -NoProfile -File .\scripts\Invoke-CdevCli.ps1 repos list
 pwsh -NoProfile -File .\scripts\Invoke-CdevCli.ps1 repos doctor --workspace-root C:\dev
 pwsh -NoProfile -File .\scripts\Invoke-CdevCli.ps1 installer exercise --mode fast --iterations 1
+pwsh -NoProfile -File .\scripts\Invoke-CdevCli.ps1 ci integration-gate --repo svelderrainruiz/labview-cdev-surface --branch main
 ```
 
 ## Linux Flow (Docker Desktop Linux)

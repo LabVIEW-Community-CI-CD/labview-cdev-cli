@@ -33,7 +33,8 @@ jobs:
           Invoke-Pester -Path @(
             './tests/CdevCliContract.Tests.ps1',
             './tests/CdevCliInstallerContract.Tests.ps1',
-            './tests/CdevCliLinuxContract.Tests.ps1'
+            './tests/CdevCliLinuxContract.Tests.ps1',
+            './tests/CdevCliCiContract.Tests.ps1'
           ) -CI -Output Detailed
 
   cli-contract:

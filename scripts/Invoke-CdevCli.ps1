@@ -174,7 +174,7 @@ try {
         'ci' {
             switch ($command) {
                 'integration-gate' {
-                    $repo = if ($argsMap.ContainsKey('repo')) { [string]$argsMap['repo'] } else { 'LabVIEW-Community-CI-CD/labview-cdev-surface' }
+                    $repo = if ($argsMap.ContainsKey('repo')) { [string]$argsMap['repo'] } else { 'svelderrainruiz/labview-cdev-surface' }
                     $branch = if ($argsMap.ContainsKey('branch')) { [string]$argsMap['branch'] } else { 'main' }
                     $workflow = if ($argsMap.ContainsKey('workflow')) { [string]$argsMap['workflow'] } else { 'ci.yml' }
                     $poll = if ($argsMap.ContainsKey('poll-seconds')) { [int]$argsMap['poll-seconds'] } else { 15 }

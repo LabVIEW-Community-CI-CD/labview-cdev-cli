@@ -1,6 +1,22 @@
+function Assert-CdevCiRepositoryTarget {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Repository
+    )
+
+    $candidate = [string]$Repository
+    if ([string]::IsNullOrWhiteSpace($candidate)) {
+        throw 'ci integration-gate requires a non-empty repository target.'
+    }
+
+    if ($candidate -match '^(?i)LabVIEW-Community-CI-CD\/') {
+        throw "Fork workflow guardrail: direct ci integration-gate dispatch to '$candidate' is not allowed. Use a fork repo target (for example: svelderrainruiz/labview-cdev-surface)."
+    }
+}
+
 function Invoke-CdevCiIntegrationGate {
     param(
-        [string]$Repository = 'LabVIEW-Community-CI-CD/labview-cdev-surface',
+        [string]$Repository = 'svelderrainruiz/labview-cdev-surface',
         [string]$Branch = 'main',
         [string]$Workflow = 'ci.yml',
         [int]$PollSeconds = 15,
@@ -9,6 +25,7 @@ function Invoke-CdevCiIntegrationGate {
     )
 
     Assert-CdevCommand -Name 'gh'
+    Assert-CdevCiRepositoryTarget -Repository $Repository
 
     & gh workflow run $Workflow -R $Repository --ref $Branch
     if ($LASTEXITCODE -ne 0) {
