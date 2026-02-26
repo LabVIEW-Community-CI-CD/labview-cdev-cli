@@ -37,6 +37,7 @@ pwsh -NoProfile -File .\scripts\Invoke-ControlledForkForceAlign.ps1 `
 Artifacts are written to `artifacts/force-align/<branch>-<timestamp>/`:
 - `branch-protection.snapshot.json`
 - `branch-protection.relaxed.json`
+- `branch-protection.restore.json`
 - `controlled-force-align-report.json`
 
 ## What the Script Does

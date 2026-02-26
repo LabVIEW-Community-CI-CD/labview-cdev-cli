@@ -53,6 +53,7 @@ Describe 'cdev CLI controlled force-align operations contract' {
             'Invoke-ControlledForkForceAlign.ps1',
             'branch-protection.snapshot.json',
             'branch-protection.relaxed.json',
+            'branch-protection.restore.json',
             'controlled-force-align-report.json'
         )) {
             $script:runbook | Should -Match ([regex]::Escape($token))

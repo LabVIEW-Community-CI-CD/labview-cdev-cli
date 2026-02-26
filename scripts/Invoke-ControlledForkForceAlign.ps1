@@ -85,6 +85,88 @@ function Invoke-GhRaw {
     return ([string]::Join("`n", @($output))).Trim()
 }
 
+function Get-ObjectPropertyValue {
+    param(
+        [Parameter(Mandatory = $true)]
+        $Object,
+        [Parameter(Mandatory = $true)]
+        [string]$Name,
+        [Parameter()]
+        $Default = $null
+    )
+
+    if ($null -eq $Object) {
+        return $Default
+    }
+
+    $property = $Object.PSObject.Properties[$Name]
+    if ($null -eq $property) {
+        return $Default
+    }
+
+    return $property.Value
+}
+
+function Convert-BranchProtectionToUpdatePayload {
+    param(
+        [Parameter(Mandatory = $true)]
+        $Protection
+    )
+
+    $requiredStatusChecks = $null
+    $requiredStatusChecksSource = Get-ObjectPropertyValue -Object $Protection -Name 'required_status_checks'
+    if ($null -ne $requiredStatusChecksSource) {
+        $requiredStatusChecks = [ordered]@{
+            strict = [bool](Get-ObjectPropertyValue -Object $requiredStatusChecksSource -Name 'strict' -Default $false)
+            contexts = @((Get-ObjectPropertyValue -Object $requiredStatusChecksSource -Name 'contexts' -Default @()) | ForEach-Object { [string]$_ })
+        }
+    }
+
+    $requiredPullRequestReviews = $null
+    $requiredPullRequestReviewsSource = Get-ObjectPropertyValue -Object $Protection -Name 'required_pull_request_reviews'
+    if ($null -ne $requiredPullRequestReviewsSource) {
+        $requiredPullRequestReviews = [ordered]@{
+            dismiss_stale_reviews = [bool](Get-ObjectPropertyValue -Object $requiredPullRequestReviewsSource -Name 'dismiss_stale_reviews' -Default $false)
+            require_code_owner_reviews = [bool](Get-ObjectPropertyValue -Object $requiredPullRequestReviewsSource -Name 'require_code_owner_reviews' -Default $false)
+            require_last_push_approval = [bool](Get-ObjectPropertyValue -Object $requiredPullRequestReviewsSource -Name 'require_last_push_approval' -Default $false)
+            required_approving_review_count = [int](Get-ObjectPropertyValue -Object $requiredPullRequestReviewsSource -Name 'required_approving_review_count' -Default 0)
+        }
+    }
+
+    $restrictions = $null
+    $restrictionsSource = Get-ObjectPropertyValue -Object $Protection -Name 'restrictions'
+    if ($null -ne $restrictionsSource) {
+        $restrictions = [ordered]@{
+            users = @((Get-ObjectPropertyValue -Object $restrictionsSource -Name 'users' -Default @()) | ForEach-Object { [string]$_.login })
+            teams = @((Get-ObjectPropertyValue -Object $restrictionsSource -Name 'teams' -Default @()) | ForEach-Object { [string]$_.slug })
+            apps = @((Get-ObjectPropertyValue -Object $restrictionsSource -Name 'apps' -Default @()) | ForEach-Object { [string]$_.slug })
+        }
+    }
+
+    $enforceAdminsSource = Get-ObjectPropertyValue -Object $Protection -Name 'enforce_admins'
+    $requiredLinearHistorySource = Get-ObjectPropertyValue -Object $Protection -Name 'required_linear_history'
+    $allowForcePushesSource = Get-ObjectPropertyValue -Object $Protection -Name 'allow_force_pushes'
+    $allowDeletionsSource = Get-ObjectPropertyValue -Object $Protection -Name 'allow_deletions'
+    $blockCreationsSource = Get-ObjectPropertyValue -Object $Protection -Name 'block_creations'
+    $requiredConversationSource = Get-ObjectPropertyValue -Object $Protection -Name 'required_conversation_resolution'
+    $lockBranchSource = Get-ObjectPropertyValue -Object $Protection -Name 'lock_branch'
+    $allowForkSyncingSource = Get-ObjectPropertyValue -Object $Protection -Name 'allow_fork_syncing'
+
+    return [ordered]@{
+        required_status_checks = $requiredStatusChecks
+        enforce_admins = [bool](Get-ObjectPropertyValue -Object $enforceAdminsSource -Name 'enabled' -Default $false)
+        required_pull_request_reviews = $requiredPullRequestReviews
+        restrictions = $restrictions
+        required_linear_history = [bool](Get-ObjectPropertyValue -Object $requiredLinearHistorySource -Name 'enabled' -Default $false)
+        allow_force_pushes = [bool](Get-ObjectPropertyValue -Object $allowForcePushesSource -Name 'enabled' -Default $false)
+        allow_deletions = [bool](Get-ObjectPropertyValue -Object $allowDeletionsSource -Name 'enabled' -Default $false)
+        block_creations = [bool](Get-ObjectPropertyValue -Object $blockCreationsSource -Name 'enabled' -Default $false)
+        required_conversation_resolution = [bool](Get-ObjectPropertyValue -Object $requiredConversationSource -Name 'enabled' -Default $false)
+        lock_branch = [bool](Get-ObjectPropertyValue -Object $lockBranchSource -Name 'enabled' -Default $false)
+        allow_fork_syncing = [bool](Get-ObjectPropertyValue -Object $allowForkSyncingSource -Name 'enabled' -Default $false)
+    }
+}
+
 function Wait-ForCiSuccess {
     param(
         [Parameter(Mandatory = $true)]
@@ -153,6 +235,7 @@ New-Item -Path $outputDirectory -ItemType Directory -Force | Out-Null
 $reportPath = Join-Path $outputDirectory 'controlled-force-align-report.json'
 $protectionSnapshotPath = Join-Path $outputDirectory 'branch-protection.snapshot.json'
 $protectionRelaxedPath = Join-Path $outputDirectory 'branch-protection.relaxed.json'
+$protectionRestorePath = Join-Path $outputDirectory 'branch-protection.restore.json'
 
 $report = [ordered]@{
     schema_version = '1.0'
@@ -196,6 +279,8 @@ try {
 
     $snapshotProtectionJson = Invoke-GhJson -Arguments @('api', "repos/$ForkRepository/branches/$Branch/protection") -Description "snapshot branch protection"
     Write-JsonFile -Path $protectionSnapshotPath -Object $snapshotProtectionJson
+    $restoreProtection = Convert-BranchProtectionToUpdatePayload -Protection $snapshotProtectionJson
+    Write-JsonFile -Path $protectionRestorePath -Object $restoreProtection
 
     $relaxedProtection = [ordered]@{
         required_status_checks = $null
@@ -293,7 +378,7 @@ finally {
         $report.protection_restore_attempted = $true
         if (-not $DryRun) {
             try {
-                & gh api -X PUT "repos/$ForkRepository/branches/$Branch/protection" --input $protectionSnapshotPath
+                & gh api -X PUT "repos/$ForkRepository/branches/$Branch/protection" --input $protectionRestorePath
                 if ($LASTEXITCODE -ne 0) {
                     throw 'gh api returned a non-zero exit code during protection restore.'
                 }
