@@ -224,6 +224,33 @@ function Wait-ForCiSuccess {
     throw "Timed out waiting for CI Pipeline success for $TargetSha in $Repository@$BranchName."
 }
 
+function Wait-ForBranchHeadParity {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Repository,
+        [Parameter(Mandatory = $true)]
+        [string]$BranchName,
+        [Parameter(Mandatory = $true)]
+        [string]$TargetSha,
+        [Parameter()]
+        [int]$TimeoutSeconds = 60,
+        [Parameter()]
+        [int]$PollSeconds = 3
+    )
+
+    $deadlineUtc = (Get-Date).ToUniversalTime().AddSeconds($TimeoutSeconds)
+    while ((Get-Date).ToUniversalTime() -lt $deadlineUtc) {
+        $head = Invoke-GhRaw -Arguments @('api', "repos/$Repository/commits/$BranchName", '--jq', '.sha') -Description "query '$Repository@$BranchName' head SHA"
+        if ([string]$head -eq [string]$TargetSha) {
+            return $head
+        }
+        Start-Sleep -Seconds $PollSeconds
+    }
+
+    $currentHead = Invoke-GhRaw -Arguments @('api', "repos/$Repository/commits/$BranchName", '--jq', '.sha') -Description "query '$Repository@$BranchName' final head SHA"
+    throw "Timed out waiting for '$Repository@$BranchName' to converge to '$TargetSha'. current='$currentHead'"
+}
+
 if (-not (Get-Command -Name 'gh' -ErrorAction SilentlyContinue)) {
     throw 'GitHub CLI (gh) is required.'
 }
@@ -330,7 +357,7 @@ try {
         }
 
         $forkHeadAfter = if ($DryRun) { $upstreamHead } else {
-            Invoke-GhRaw -Arguments @('api', "repos/$ForkRepository/commits/$Branch", '--jq', '.sha') -Description "query fork head SHA after alignment"
+            Wait-ForBranchHeadParity -Repository $ForkRepository -BranchName $Branch -TargetSha $upstreamHead -TimeoutSeconds 60 -PollSeconds 3
         }
         $parity = ($forkHeadAfter -eq $upstreamHead)
         if (-not $parity) {
