@@ -2,8 +2,11 @@
 
 Base runtime image for `labview-cdev-cli` command execution.
 
-Default repository:
-- `ghcr.io/svelderrainruiz/labview-cdev-cli-runtime`
+Publish repository:
+- `ghcr.io/<repository-owner>/labview-cdev-cli-runtime`
+
+Canonical consumer repository:
+- `ghcr.io/labview-community-ci-cd/labview-cdev-cli-runtime`
 
 Deterministic tags:
 - `sha-<12-char-commit>`

@@ -81,4 +81,5 @@ This repository is the control-plane CLI for deterministic `C:\dev` workspace or
   - `.sha256`
   - `cdev-cli.spdx.json`
   - `cdev-cli.slsa.json`
-- `publish-cli-runtime-image.yml` publishes base runtime image `ghcr.io/svelderrainruiz/labview-cdev-cli-runtime` with immutable tags (`sha-*`, `v1-YYYYMMDD`) and optional mutable `v1`.
+- `publish-cli-runtime-image.yml` publishes base runtime image `ghcr.io/<repository-owner>/labview-cdev-cli-runtime` with immutable tags (`sha-*`, `v1-YYYYMMDD`) and optional mutable `v1`.
+- Canonical consumer image path is `ghcr.io/labview-community-ci-cd/labview-cdev-cli-runtime`.

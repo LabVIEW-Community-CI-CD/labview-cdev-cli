@@ -56,8 +56,11 @@ Release artifacts:
 
 ## Runtime Image (Base Layer)
 
-`publish-cli-runtime-image.yml` publishes the base CLI runtime image:
-- `ghcr.io/svelderrainruiz/labview-cdev-cli-runtime`
+`publish-cli-runtime-image.yml` publishes the base CLI runtime image to:
+- `ghcr.io/<repository-owner>/labview-cdev-cli-runtime`
+
+Canonical consumer reference remains:
+- `ghcr.io/labview-community-ci-cd/labview-cdev-cli-runtime`
 
 Deterministic tags:
 - `sha-<12-char-commit>`
@@ -68,7 +71,7 @@ Dispatch manually:
 
 ```powershell
 gh workflow run publish-cli-runtime-image.yml `
-  -R svelderrainruiz/labview-cdev-cli `
+  -R <owner>/labview-cdev-cli `
   -f promote_v1=true
 ```
 
