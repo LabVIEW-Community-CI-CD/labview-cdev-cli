@@ -32,7 +32,8 @@ Describe 'cdev CLI runtime image publish contract' {
         $script:workflow | Should -Match 'workflow_dispatch:'
         $script:workflow | Should -Match 'push:'
         $script:workflow | Should -Match 'packages:\s*write'
-        $script:workflow | Should -Match 'ghcr\.io/\$\{\{\s*github\.repository_owner\s*\}\}/labview-cdev-cli-runtime'
+        $script:workflow | Should -Match "tr '\[:upper:\]' '\[:lower:\]'"
+        $script:workflow | Should -Match 'image_repo="ghcr\.io/\$\{owner_lc\}/labview-cdev-cli-runtime"'
         $script:workflow | Should -Match 'docker/login-action@v3'
         $script:workflow | Should -Match 'docker/build-push-action@v6'
     }
