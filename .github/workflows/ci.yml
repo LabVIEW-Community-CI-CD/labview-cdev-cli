@@ -36,7 +36,8 @@ jobs:
             './tests/CdevCliLinuxContract.Tests.ps1',
             './tests/CdevCliCiContract.Tests.ps1',
             './tests/CdevCliSyncGuardContract.Tests.ps1',
-            './tests/CdevCliForceAlignOpsContract.Tests.ps1'
+            './tests/CdevCliForceAlignOpsContract.Tests.ps1',
+            './tests/CdevCliRuntimeImagePublishContract.Tests.ps1'
           ) -CI -Output Detailed
 
   cli-contract:

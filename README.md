@@ -54,6 +54,24 @@ Release artifacts:
 - `cdev-cli.spdx.json`
 - `cdev-cli.slsa.json`
 
+## Runtime Image (Base Layer)
+
+`publish-cli-runtime-image.yml` publishes the base CLI runtime image:
+- `ghcr.io/svelderrainruiz/labview-cdev-cli-runtime`
+
+Deterministic tags:
+- `sha-<12-char-commit>`
+- `v1-YYYYMMDD`
+- `v1` (when promoted)
+
+Dispatch manually:
+
+```powershell
+gh workflow run publish-cli-runtime-image.yml `
+  -R svelderrainruiz/labview-cdev-cli `
+  -f promote_v1=true
+```
+
 ## Operations Runbooks
 
 - Controlled fork/upstream SHA parity recovery:
