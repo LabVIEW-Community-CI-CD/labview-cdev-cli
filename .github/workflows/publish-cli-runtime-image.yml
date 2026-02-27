@@ -19,6 +19,7 @@ on:
     paths:
       - tools/cli-runtime/Dockerfile
       - scripts/Invoke-CdevCli.ps1
+      - scripts/Write-CliDependencyAttestation.ps1
       - scripts/lib/**
       - cli-contract.json
 
@@ -102,6 +103,57 @@ jobs:
           push: true
           tags: ${{ steps.resolve.outputs.tags }}
 
+      - name: Capture fork/upstream sync evidence
+        id: sync_guard
+        continue-on-error: true
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $syncReportPath = Join-Path $env:RUNNER_TEMP 'fork-upstream-sync-drift-report.json'
+          & pwsh -NoProfile -File ./scripts/Test-ForkUpstreamSyncGuard.ps1 `
+            -UpstreamRepository 'LabVIEW-Community-CI-CD/labview-cdev-cli' `
+            -ForkRepository 'svelderrainruiz/labview-cdev-cli' `
+            -UpstreamBranch 'main' `
+            -ForkBranch 'main' `
+            -OutputPath $syncReportPath
+
+      - name: Write CLI dependency attestation
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $syncReportPath = Join-Path $env:RUNNER_TEMP 'fork-upstream-sync-drift-report.json'
+          $attestationPath = Join-Path $env:RUNNER_TEMP 'cli-dependency-attestation.json'
+
+          $syncReportArgs = @()
+          if (Test-Path -LiteralPath $syncReportPath -PathType Leaf) {
+            $syncReportArgs = @('-SyncGuardReportPath', $syncReportPath)
+          }
+
+          & pwsh -NoProfile -File ./scripts/Write-CliDependencyAttestation.ps1 `
+            -SourceCommit '${{ github.sha }}' `
+            -RuntimeImageRepository '${{ steps.resolve.outputs.image_repo }}' `
+            -RuntimeImageDigest '${{ steps.build.outputs.digest }}' `
+            -OutputPath $attestationPath `
+            @syncReportArgs
+
+      - name: Upload sync-guard evidence report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fork-upstream-sync-drift-report
+          path: ${{ runner.temp }}/fork-upstream-sync-drift-report.json
+          if-no-files-found: warn
+
+      - name: Upload CLI dependency attestation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-dependency-attestation
+          path: ${{ runner.temp }}/cli-dependency-attestation.json
+          if-no-files-found: error
+
       - name: Publish summary
         shell: bash
         run: |
@@ -111,6 +163,7 @@ jobs:
             echo "- Image: \`${{ steps.resolve.outputs.image_repo }}\`"
             echo "- Digest: \`${{ steps.build.outputs.digest }}\`"
             echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Dependency attestation: \`cli-dependency-attestation.json\`"
             echo "- Tags:"
             while IFS= read -r tag; do
               echo "  - \`$tag\`"

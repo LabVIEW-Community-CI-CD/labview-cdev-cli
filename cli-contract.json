@@ -9,6 +9,14 @@
     "postactions": ["collect"],
     "linux": ["install", "deploy-ni"],
     "ci": ["integration-gate"],
+    "ops": [
+      "program run",
+      "program status",
+      "program freeze",
+      "program unfreeze",
+      "program drill",
+      "program evidence export"
+    ],
     "release": ["package"]
   }
 }

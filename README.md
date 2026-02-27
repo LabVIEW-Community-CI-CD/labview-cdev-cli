@@ -23,6 +23,12 @@ On Linux, invoke the same entrypoint with `pwsh -NoProfile -File`.
 - `linux install`
 - `linux deploy-ni`
 - `ci integration-gate`
+- `ops program run`
+- `ops program status`
+- `ops program freeze`
+- `ops program unfreeze`
+- `ops program drill`
+- `ops program evidence export`
 - `release package`
 
 ## Quick Start
@@ -32,6 +38,7 @@ powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\scripts\Invoke-CdevC
 powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\scripts\Invoke-CdevCli.ps1 repos doctor --workspace-root C:\dev
 powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\scripts\Invoke-CdevCli.ps1 installer exercise --mode fast --iterations 1
 powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\scripts\Invoke-CdevCli.ps1 ci integration-gate --repo svelderrainruiz/labview-cdev-surface --branch main
+powershell -NoProfile -ExecutionPolicy RemoteSigned -File .\scripts\Invoke-CdevCli.ps1 ops program run --mode Validate --dry-run true --enrollment-repo LabVIEW-Community-CI-CD/labview-cdev-surface-fork
 ```
 
 ## Linux Flow (Docker Desktop Linux)
@@ -66,6 +73,14 @@ Deterministic tags:
 - `sha-<12-char-commit>`
 - `v1-YYYYMMDD`
 - `v1` (when promoted)
+
+The publish workflow also emits:
+- `cli-dependency-attestation.json`
+  - `source_commit`
+  - `runtime_image.repository`
+  - `runtime_image.digest`
+  - `sync_guard_evidence`
+  - `parity_evidence`
 
 Dispatch manually:
 
