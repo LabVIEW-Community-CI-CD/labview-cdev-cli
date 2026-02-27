@@ -34,8 +34,6 @@ jobs:
   publish:
     name: Publish CLI Runtime Image
     runs-on: ubuntu-latest
-    env:
-      IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/labview-cdev-cli-runtime
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,6 +46,12 @@ jobs:
 
           date_utc="$(date -u +%Y%m%d)"
           short_sha="${GITHUB_SHA:0:12}"
+          owner_lc="$(printf '%s' "${GITHUB_REPOSITORY_OWNER}" | tr '[:upper:]' '[:lower:]')"
+          if [[ -z "$owner_lc" ]]; then
+            echo "github repository owner is empty" >&2
+            exit 1
+          fi
+          image_repo="ghcr.io/${owner_lc}/labview-cdev-cli-runtime"
           promote_v1="${{ github.event.inputs.promote_v1 }}"
           additional_tag="${{ github.event.inputs.additional_tag }}"
 
@@ -61,18 +65,19 @@ jobs:
           fi
 
           tags=()
-          tags+=("${IMAGE_REPO}:sha-${short_sha}")
-          tags+=("${IMAGE_REPO}:v1-${date_utc}")
+          tags+=("${image_repo}:sha-${short_sha}")
+          tags+=("${image_repo}:v1-${date_utc}")
           if [[ "$promote_v1" == "true" ]]; then
-            tags+=("${IMAGE_REPO}:v1")
+            tags+=("${image_repo}:v1")
           fi
           if [[ -n "$additional_tag" ]]; then
-            tags+=("${IMAGE_REPO}:${additional_tag}")
+            tags+=("${image_repo}:${additional_tag}")
           fi
 
           {
             echo "date_utc=$date_utc"
             echo "short_sha=$short_sha"
+            echo "image_repo=$image_repo"
             echo "tags<<EOF"
             printf '%s\n' "${tags[@]}"
             echo "EOF"
@@ -103,7 +108,7 @@ jobs:
           {
             echo "## cdev CLI Runtime Image Published"
             echo ""
-            echo "- Image: \`${IMAGE_REPO}\`"
+            echo "- Image: \`${{ steps.resolve.outputs.image_repo }}\`"
             echo "- Digest: \`${{ steps.build.outputs.digest }}\`"
             echo "- Commit: \`${GITHUB_SHA}\`"
             echo "- Tags:"
