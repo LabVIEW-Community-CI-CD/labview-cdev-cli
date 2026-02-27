@@ -34,12 +34,19 @@ This repository is the control-plane CLI for deterministic `C:\dev` workspace or
   - installer iterations (`installer exercise`)
   - post-action gate summaries (`postactions collect`)
   - Linux NI deploy checks (`linux deploy-ni`).
+  - release program orchestration (`ops program run|status|freeze|unfreeze|drill|evidence export`).
 - Core command tokens that must stay stable:
   - `Invoke-CdevCli.ps1`
   - `repos doctor`
   - `installer exercise`
   - `postactions collect`
   - `linux deploy-ni`
+  - `ops program run`
+  - `ops program status`
+  - `ops program freeze`
+  - `ops program unfreeze`
+  - `ops program drill`
+  - `ops program evidence export`
   - `desktop-linux`
   - `nationalinstruments/labview:latest-linux`
 
@@ -83,3 +90,4 @@ This repository is the control-plane CLI for deterministic `C:\dev` workspace or
   - `cdev-cli.slsa.json`
 - `publish-cli-runtime-image.yml` publishes base runtime image `ghcr.io/<repository-owner>/labview-cdev-cli-runtime` with immutable tags (`sha-*`, `v1-YYYYMMDD`) and optional mutable `v1`.
 - Canonical consumer image path is `ghcr.io/labview-community-ci-cd/labview-cdev-cli-runtime`.
+- `publish-cli-runtime-image.yml` must upload `cli-dependency-attestation.json` with runtime digest + sync-guard/parity evidence.

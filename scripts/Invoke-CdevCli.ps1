@@ -32,6 +32,7 @@ foreach ($libFile in @(
     'Installer.Commands.ps1',
     'Linux.Commands.ps1',
     'Ci.Commands.ps1',
+    'OpsProgram.Commands.ps1',
     'Release.Commands.ps1'
 )) {
     $path = Join-Path $libRoot $libFile
@@ -62,6 +63,12 @@ function Show-CdevHelp {
         '  linux install',
         '  linux deploy-ni',
         '  ci integration-gate',
+        '  ops program run',
+        '  ops program status',
+        '  ops program freeze',
+        '  ops program unfreeze',
+        '  ops program drill',
+        '  ops program evidence export',
         '  release package',
         '',
         'Examples:',
@@ -70,7 +77,8 @@ function Show-CdevHelp {
         '  powershell -NoProfile -ExecutionPolicy RemoteSigned -File scripts/Invoke-CdevCli.ps1 installer exercise --mode fast --iterations 1',
         '  powershell -NoProfile -ExecutionPolicy RemoteSigned -File scripts/Invoke-CdevCli.ps1 postactions collect --report-path C:\dev\artifacts\workspace-install-latest.json',
         '  powershell -NoProfile -ExecutionPolicy RemoteSigned -File scripts/Invoke-CdevCli.ps1 linux install --workspace-root C:\dev-linux',
-        '  powershell -NoProfile -ExecutionPolicy RemoteSigned -File scripts/Invoke-CdevCli.ps1 linux deploy-ni --workspace-root C:\dev-linux --docker-context desktop-linux'
+        '  powershell -NoProfile -ExecutionPolicy RemoteSigned -File scripts/Invoke-CdevCli.ps1 linux deploy-ni --workspace-root C:\dev-linux --docker-context desktop-linux',
+        '  powershell -NoProfile -ExecutionPolicy RemoteSigned -File scripts/Invoke-CdevCli.ps1 ops program run --mode Validate --dry-run true --enrollment-repo LabVIEW-Community-CI-CD/labview-cdev-surface-fork'
     )
 
     if ([string]::IsNullOrWhiteSpace($Topic)) {
@@ -84,6 +92,7 @@ function Show-CdevHelp {
         'postactions' { Write-Host 'postactions command: collect' }
         'linux' { Write-Host 'linux commands: install, deploy-ni' }
         'ci' { Write-Host 'ci command: integration-gate' }
+        'ops' { Write-Host 'ops commands: program run|status|freeze|unfreeze|drill|evidence export' }
         'release' { Write-Host 'release command: package' }
         default {
             Write-Host "Unknown help topic '$Topic'."
@@ -202,6 +211,56 @@ try {
                 }
                 default {
                     throw "Unsupported ci command '$command'. Use 'ci integration-gate'."
+                }
+            }
+        }
+        'ops' {
+            switch ($command) {
+                'program' {
+                    if ($passThroughArgs.Count -lt 1) {
+                        throw "Unsupported ops program command ''. Use 'ops program run|status|freeze|unfreeze|drill|evidence export'."
+                    }
+
+                    $programAction = ([string]$passThroughArgs[0]).ToLowerInvariant()
+                    $programArgs = if ($passThroughArgs.Count -gt 1) { @($passThroughArgs[1..($passThroughArgs.Count - 1)]) } else { @() }
+                    switch ($programAction) {
+                        'run' {
+                            $result = Invoke-CdevOpsProgramRun -PassThroughArgs $programArgs
+                        }
+                        'status' {
+                            $result = Invoke-CdevOpsProgramStatus -PassThroughArgs $programArgs
+                        }
+                        'freeze' {
+                            $result = Invoke-CdevOpsProgramFreeze -PassThroughArgs $programArgs
+                        }
+                        'unfreeze' {
+                            $result = Invoke-CdevOpsProgramUnfreeze -PassThroughArgs $programArgs
+                        }
+                        'drill' {
+                            $result = Invoke-CdevOpsProgramDrill -PassThroughArgs $programArgs
+                        }
+                        'evidence' {
+                            if ($programArgs.Count -lt 1) {
+                                throw "Unsupported ops program evidence subcommand ''. Use 'ops program evidence export'."
+                            }
+                            $evidenceAction = ([string]$programArgs[0]).ToLowerInvariant()
+                            $evidenceArgs = if ($programArgs.Count -gt 1) { @($programArgs[1..($programArgs.Count - 1)]) } else { @() }
+                            switch ($evidenceAction) {
+                                'export' {
+                                    $result = Invoke-CdevOpsProgramEvidenceExport -PassThroughArgs $evidenceArgs
+                                }
+                                default {
+                                    throw "Unsupported ops program evidence subcommand '$evidenceAction'. Use 'ops program evidence export'."
+                                }
+                            }
+                        }
+                        default {
+                            throw "Unsupported ops program command '$programAction'. Use 'ops program run|status|freeze|unfreeze|drill|evidence export'."
+                        }
+                    }
+                }
+                default {
+                    throw "Unsupported ops command '$command'. Use 'ops program ...'."
                 }
             }
         }

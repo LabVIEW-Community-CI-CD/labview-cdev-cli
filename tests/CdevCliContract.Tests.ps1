@@ -51,24 +51,28 @@ Describe 'cdev CLI command contract' {
         $script:contract.commands.PSObject.Properties.Name | Should -Contain 'postactions'
         $script:contract.commands.PSObject.Properties.Name | Should -Contain 'linux'
         $script:contract.commands.PSObject.Properties.Name | Should -Contain 'ci'
+        $script:contract.commands.PSObject.Properties.Name | Should -Contain 'ops'
         $script:contract.commands.PSObject.Properties.Name | Should -Contain 'release'
     }
 
     It 'implements required command tokens in entrypoint' {
         foreach ($token in @(
             'repos', 'doctor', 'surface', 'sync', 'installer', 'build', 'exercise', 'install',
-            'postactions', 'collect', 'linux', 'deploy-ni', 'integration-gate', 'release', 'package'
+            'postactions', 'collect', 'linux', 'deploy-ni', 'integration-gate',
+            'ops', 'program', 'freeze', 'unfreeze', 'drill', 'evidence', 'export',
+            'release', 'package'
         )) {
             $script:content | Should -Match ([regex]::Escape($token))
         }
     }
 
     It 'documents CLI orchestration in AGENTS and README' {
-        foreach ($token in @('Invoke-CdevCli.ps1', 'repos doctor', 'installer exercise', 'postactions collect', 'linux deploy-ni', 'desktop-linux', 'nationalinstruments/labview:latest-linux')) {
+        foreach ($token in @('Invoke-CdevCli.ps1', 'repos doctor', 'installer exercise', 'postactions collect', 'linux deploy-ni', 'ops program run', 'ops program status', 'desktop-linux', 'nationalinstruments/labview:latest-linux')) {
             $script:agents | Should -Match ([regex]::Escape($token))
         }
         $script:readme | Should -Match ([regex]::Escape('Invoke-CdevCli.ps1'))
         $script:readme | Should -Match ([regex]::Escape('linux deploy-ni'))
+        $script:readme | Should -Match ([regex]::Escape('ops program run'))
     }
 
     It 'runs help command without requiring a surface root path' {
